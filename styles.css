@@ -1,0 +1,128 @@
+:root {
+  color-scheme: light;
+  --page: #f5f5ec;
+  --panel: #fffef8;
+  --ink: #182e26;
+  --muted: #4c6158;
+  --accent: #204d3c;
+  --on-accent: #fffef8;
+  --selected: #e9efda;
+  --line: #c9d2c4;
+  --error: #9b322b;
+  font-family: system-ui, sans-serif;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #17231e;
+  --panel: #212f28;
+  --ink: #f0f3e9;
+  --muted: #bdcbbf;
+  --accent: #cde39e;
+  --on-accent: #182e26;
+  --selected: #394936;
+  --line: #65796b;
+  --error: #ffaba4;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--page); color: var(--ink); }
+button, input, select { font: inherit; color: inherit; }
+button, select, input[type="checkbox"], .mode-grid label { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+
+.site-header {
+  max-width: 72rem;
+  margin: auto;
+  padding: 1.25rem clamp(1rem, 5vw, 3rem);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+.brand, .preferences, .actions, .round-header {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+}
+.brand { font-weight: 750; }
+.brand svg { color: var(--ink); }
+main { max-width: 53rem; margin: auto; padding: 1rem 1rem 3rem; }
+.intro { margin-block: 1rem 1.65rem; text-align: center; }
+.eyebrow { font-size: .75rem; font-weight: 800; letter-spacing: .14em; }
+h1 {
+  font-family: Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(3rem, 10vw, 6rem);
+  line-height: 1;
+  letter-spacing: -.055em;
+  margin: .25rem 0 .85rem;
+}
+p, small, #counter, #progress { color: var(--muted); }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 1.35rem;
+  padding: clamp(1rem, 4vw, 2rem);
+  box-shadow: 0 .75rem 2.5rem #1024190c;
+}
+fieldset { padding: 0; margin: 0 0 1.25rem; border: 0; min-inline-size: 0; }
+legend { padding: 0; margin-bottom: .65rem; font-weight: 750; }
+.mode-grid, .settings-grid { display: grid; gap: .7rem; }
+.mode-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mode-grid label { position: relative; }
+.mode-grid input { position: absolute; opacity: 0; }
+.mode-grid label span {
+  display: grid;
+  gap: .25rem;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: .85rem;
+  padding: .8rem;
+}
+.mode-grid input:checked + span { background: var(--selected); border-color: var(--accent); }
+.mode-grid input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 3px; }
+.settings-grid label { display: grid; gap: .4rem; font-size: .9rem; font-weight: 650; }
+input[type="number"], select, .secondary {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: .65rem;
+  min-height: 2.65rem;
+  padding: .45rem .65rem;
+}
+input[type="number"] { width: 100%; direction: ltr; text-align: start; }
+.toggle { display: flex; align-items: center; gap: .55rem; margin: 1rem 0; }
+.toggle input { width: 1.15rem; height: 1.15rem; accent-color: var(--accent); }
+.actions { border-top: 1px solid var(--line); padding-top: 1rem; flex-wrap: wrap; gap: 1rem; }
+.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+  border-radius: .7rem;
+  min-height: 2.8rem;
+  padding: .55rem 1.15rem;
+  font-weight: 750;
+}
+button:hover { filter: brightness(.9); }
+.error { color: var(--error); }
+.round-header { justify-content: space-between; flex-wrap: wrap; }
+.stage {
+  min-height: clamp(16rem, 62vh, 36rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: .75rem;
+}
+#number { font-size: clamp(2.5rem, 13vw, 9rem); font-weight: 750; line-height: 1; font-variant-numeric: tabular-nums; }
+#round-status { margin: 0; }
+#keyboard-help { text-align: center; font-size: .8rem; }
+#practice:fullscreen { border: 0; border-radius: 0; overflow: auto; }
+#practice:fullscreen .stage { min-height: 75vh; }
+@media (max-width: 410px) {
+  .mode-grid { grid-template-columns: 1fr; }
+  .mode-grid label span { gap: .15rem; }
+}

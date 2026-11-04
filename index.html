@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5ec">
+  <meta name="description" content="Practice soroban mental arithmetic with customizable Flash Anzan drills.">
+  <title>Flash Anzan · Soroban Practice</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <svg aria-hidden="true" viewBox="0 0 40 40" width="40" height="40">
+        <rect width="40" height="40" rx="12" fill="currentColor"/>
+        <path d="M14 9v22M26 9v22M9 18h22" stroke="#d9e8a9" stroke-width="1.5"/>
+        <path d="m9 13 5-3 5 3-5 3zm12 12 5-3 5 3-5 3z" fill="#d9e8a9"/>
+      </svg>
+      <span data-copy="brand">Soroban Practice</span>
+    </div>
+    <div class="preferences">
+      <select id="language" aria-label="Language">
+        <option value="en">EN</option><option value="ar">العربية</option>
+      </select>
+      <button id="theme" class="secondary" type="button" aria-pressed="false">Dark mode</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="setup">
+      <div class="intro">
+        <p class="eyebrow" data-copy="eyebrow">MENTAL ARITHMETIC</p>
+        <h1>Flash Anzan</h1>
+        <p data-copy="intro">Watch the numbers flash, keep a running total in your head, then reveal the answer.</p>
+      </div>
+
+      <form id="settings" class="card">
+        <fieldset>
+          <legend data-copy="difficulty">Difficulty</legend>
+          <div class="mode-grid">
+            <label><input type="radio" name="mode" value="simple" checked><span><strong data-copy="simple">Simple</strong><small data-copy="simpleDetail">Direct bead moves</small></span></label>
+            <label><input type="radio" name="mode" value="five"><span><strong data-copy="five">Complex 5</strong><small data-copy="fiveDetail">Complements of five</small></span></label>
+            <label><input type="radio" name="mode" value="ten"><span><strong data-copy="ten">Complex 10</strong><small data-copy="tenDetail">Carries and borrows</small></span></label>
+          </div>
+        </fieldset>
+
+        <div class="settings-grid">
+          <label><span data-copy="digits">Digits per term</span><input name="digits" type="number" min="1" max="4" required value="1"></label>
+          <label><span data-copy="count">Terms per round</span><input name="count" type="number" min="2" max="30" required value="5"></label>
+          <label><span data-copy="visible">Number duration (ms)</span><input name="visible" type="number" min="100" max="5000" required value="800"></label>
+          <label><span data-copy="blank">Blank interval (ms)</span><input name="blank" type="number" min="0" max="5000" required value="300"></label>
+        </div>
+
+        <label class="toggle"><input type="checkbox" name="subtraction" checked><span data-copy="subtraction">Include subtraction</span></label>
+        <p id="error" class="error" role="alert" hidden></p>
+        <div class="actions">
+          <button class="primary" type="submit" data-copy="start">Start round</button>
+          <span id="counter"></span>
+        </div>
+      </form>
+    </section>
+
+    <section id="practice" class="card" hidden aria-label="Practice round">
+      <div class="round-header">
+        <button type="button" id="back" class="secondary" data-copy="back">Settings</button>
+        <span id="progress"></span>
+        <button type="button" id="pause" class="secondary" hidden data-copy="pause">Pause</button>
+        <button type="button" id="fullscreen" class="secondary" data-copy="fullscreen">Fullscreen</button>
+      </div>
+
+      <div class="stage">
+        <p id="round-status" role="status"></p>
+        <div id="number" dir="ltr"></div>
+        <button type="button" id="reveal" class="primary" hidden data-copy="reveal">Reveal answer</button>
+        <button type="button" id="resume" class="primary" hidden data-copy="resume">Resume</button>
+        <button type="button" id="again" class="primary" hidden data-copy="again">New round</button>
+      </div>
+      <p id="keyboard-help" data-copy="keyboard">Space to pause or continue · Esc for settings</p>
+    </section>
+  </main>
+</body>
+</html>
