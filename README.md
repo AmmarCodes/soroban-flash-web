@@ -17,7 +17,8 @@ Run the exercise checks with `node --test`.
 
 ## Practice rules
 
-- **Simple** uses direct bead additions and supports up to five terms.
+- **Simple** uses direct bead moves. Subtraction is enabled by default.
+  With subtraction off, Simple supports up to five terms.
 - **Complex 5** requires a complement of five in at least one column, with no
   carry or borrow.
 - **Complex 10** requires a carry or borrow in at least one column.

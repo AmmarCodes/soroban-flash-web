@@ -1,14 +1,14 @@
-import { generateRound, parseAnswer, simpleMaxTerms } from './engine.mjs?v=2';
+import { generateRound, parseAnswer, simpleMaxTerms } from './engine.mjs?v=3';
 import { playSound, unlockSound } from './sound.mjs?v=2';
 
 const translations = {
   ar: {
     brand: 'تدريب السوروبان', eyebrow: 'الحساب الذهني',
     intro: 'راقب الأعداد التي تظهر تباعًا، واحسب المجموع ذهنيًا، ثم أدخل إجابتك للتحقق منها.',
-    difficulty: 'مستوى الصعوبة', simple: 'بسيط', simpleDetail: 'جمع مباشر',
+    difficulty: 'مستوى الصعوبة', simple: 'بسيط', simpleDetail: 'حركات مباشرة للخرز',
     five: 'مركّب ٥', fiveDetail: 'مكمّلات الخمسة',
     ten: 'مركّب ١٠', tenDetail: 'الحمل والاستلاف',
-    digits: 'خانات كل عدد', count: 'الأعداد في الجولة', simpleLimit: 'حتى ٥ أعداد في المستوى البسيط',
+    digits: 'خانات كل عدد', count: 'الأعداد في الجولة', simpleLimit: 'حتى ٥ أعداد في المستوى البسيط عند إيقاف الطرح',
     visible: 'مدة ظهور العدد (مللي ثانية)', blank: 'الفاصل بين الأعداد (مللي ثانية)',
     subtraction: 'السماح بالطرح', start: 'ابدأ الجولة', back: 'الإعدادات',
     fullscreen: 'ملء الشاشة', exitFullscreen: 'إنهاء ملء الشاشة',
@@ -101,12 +101,10 @@ if (typeof saved.settings?.subtraction === 'boolean') fields.subtraction.checked
 if (typeof saved.settings?.sound === 'boolean') fields.sound.checked = saved.settings.sound;
 
 function updateModeControls() {
-  const simple = fields.mode.value === 'simple';
-  fields.count.max = simple ? simpleMaxTerms : 30;
+  const simpleAddition = fields.mode.value === 'simple' && !fields.subtraction.checked;
+  fields.count.max = simpleAddition ? simpleMaxTerms : 30;
   if (fields.count.valueAsNumber > Number(fields.count.max)) fields.count.value = fields.count.max;
-  fields.subtraction.disabled = simple;
-  byId('subtraction-option').hidden = simple;
-  byId('simple-limit').hidden = !simple;
+  byId('simple-limit').hidden = !simpleAddition;
 }
 
 updateModeControls();

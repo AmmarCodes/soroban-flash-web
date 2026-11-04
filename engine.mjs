@@ -53,12 +53,9 @@ export function generateRound({ digits, count, mode, subtraction }, random = Mat
   const max = 10 ** digits - 1;
   const width = max - min + 1;
 
-  const simple = mode === 'simple';
-  if (simple) {
-    subtraction = false;
-    if (count > simpleMaxTerms) return null;
-  }
-  const openingDigits = simple
+  const simpleAddition = mode === 'simple' && !subtraction;
+  if (simpleAddition && count > simpleMaxTerms) return null;
+  const openingDigits = simpleAddition
     ? [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(digit => simpleMovesLeft(digit, 1) >= count - 1)
     : [];
 
@@ -66,27 +63,32 @@ export function generateRound({ digits, count, mode, subtraction }, random = Mat
 
   for (let attempt = 0; attempt < 64; attempt++) {
     let total = min + Math.floor(random() * width);
-    if (simple) {
+    if (simpleAddition) {
       const leading = openingDigits[Math.floor(random() * openingDigits.length)];
       total = leading * min + Math.floor(random() * min);
     }
     const terms = [total];
+    let includedSubtraction = false;
 
     while (terms.length < count) {
       const start = Math.floor(random() * width);
       const direction = random() < 0.5 ? -1 : 1;
-      const preferredSign = subtraction && random() < 0.5 ? -1 : 1;
+      // If all previous terms were positive, the last addition can be undone
+      // with a direct subtraction of the same width.
+      const requireSubtraction = mode === 'simple' && subtraction &&
+        !includedSubtraction && terms.length === count - 1;
+      const preferredSign = requireSubtraction || (subtraction && random() < 0.5) ? -1 : 1;
       let selected = 0;
 
       for (let index = 0; index < width; index++) {
         const magnitude = min + (start + direction * index + width) % width;
         const first = preferredSign * magnitude;
         if (total + first >= 0 && classifyMove(total, first) === mode &&
-            (!simple || simpleMovesLeft(total + first, min) >= count - terms.length - 1)) {
+            (!simpleAddition || simpleMovesLeft(total + first, min) >= count - terms.length - 1)) {
           selected = first;
           break;
         }
-        if (subtraction && total - first >= 0 && classifyMove(total, -first) === mode) {
+        if (subtraction && !requireSubtraction && total - first >= 0 && classifyMove(total, -first) === mode) {
           selected = -first;
           break;
         }
@@ -95,6 +97,7 @@ export function generateRound({ digits, count, mode, subtraction }, random = Mat
       if (!selected) break;
       total += selected;
       terms.push(selected);
+      includedSubtraction ||= selected < 0;
     }
 
     if (terms.length === count) return { terms, total };
