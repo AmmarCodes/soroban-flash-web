@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { classifyMove, generateRound } from './engine.mjs';
+import { classifyMove, generateRound, parseAnswer, simpleMaxTerms } from './engine.mjs';
 
 test('classifies direct moves, complements, carries, and borrows', () => {
   for (const [total, term, mode] of [
@@ -18,7 +18,7 @@ test('generated rounds match their settings and expected answers', () => {
   for (const mode of ['simple', 'five', 'ten']) {
     for (let digits = 1; digits <= 4; digits++) {
       for (const subtraction of [false, true]) {
-        const count = subtraction ? 30 : 2;
+        const count = mode === 'simple' ? simpleMaxTerms : subtraction ? 30 : 2;
         const round = generateRound({ mode, digits, count, subtraction }, random);
         assert.ok(round, JSON.stringify({ mode, digits, count, subtraction }));
         assert.equal(round.terms.length, count);
@@ -26,7 +26,7 @@ test('generated rounds match their settings and expected answers', () => {
         let total = 0;
         for (const [index, term] of round.terms.entries()) {
           assert.equal(String(Math.abs(term)).length, digits);
-          if (!subtraction) assert.ok(term > 0);
+          if (!subtraction || mode === 'simple') assert.ok(term > 0);
           if (index > 0) assert.equal(classifyMove(total, term), mode);
           total += term;
           assert.ok(total >= 0);
@@ -40,5 +40,14 @@ test('generated rounds match their settings and expected answers', () => {
 test('rejects invalid settings and handles impossible rounds', () => {
   const settings = { mode: 'simple', digits: 1, count: 30, subtraction: false };
   assert.equal(generateRound(settings), null);
+  assert.equal(generateRound({ ...settings, subtraction: true }), null);
   assert.throws(() => generateRound({ ...settings, digits: 0 }), RangeError);
+});
+
+test('checks whole-number answers in supported digit scripts', () => {
+  for (const input of ['42', ' 042 ', '٤٢', '۴۲']) assert.equal(parseAnswer(input), 42);
+  assert.equal(parseAnswer('٠'), 0);
+  for (const input of ['', '-4', '4.2', '4e2', '9007199254740992']) {
+    assert.equal(parseAnswer(input), null);
+  }
 });

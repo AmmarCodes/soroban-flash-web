@@ -1,13 +1,14 @@
-import { generateRound } from './engine.mjs';
+import { generateRound, parseAnswer, simpleMaxTerms } from './engine.mjs';
+import { playSound, unlockSound } from './sound.mjs';
 
 const translations = {
   ar: {
     brand: 'تدريب السوروبان', eyebrow: 'الحساب الذهني',
-    intro: 'راقب الأعداد التي تظهر تباعًا، واحسب المجموع ذهنيًا، ثم اكشف الإجابة.',
-    difficulty: 'مستوى الصعوبة', simple: 'بسيط', simpleDetail: 'حركات مباشرة للخرز',
+    intro: 'راقب الأعداد التي تظهر تباعًا، واحسب المجموع ذهنيًا، ثم أدخل إجابتك للتحقق منها.',
+    difficulty: 'مستوى الصعوبة', simple: 'بسيط', simpleDetail: 'جمع مباشر',
     five: 'مركّب ٥', fiveDetail: 'مكمّلات الخمسة',
     ten: 'مركّب ١٠', tenDetail: 'الحمل والاستلاف',
-    digits: 'خانات كل عدد', count: 'الأعداد في الجولة',
+    digits: 'خانات كل عدد', count: 'الأعداد في الجولة', simpleLimit: 'حتى ٥ أعداد في المستوى البسيط',
     visible: 'مدة ظهور العدد (مللي ثانية)', blank: 'الفاصل بين الأعداد (مللي ثانية)',
     subtraction: 'السماح بالطرح', start: 'ابدأ الجولة', back: 'الإعدادات',
     fullscreen: 'ملء الشاشة', exitFullscreen: 'إنهاء ملء الشاشة',
@@ -15,7 +16,9 @@ const translations = {
     keyboard: 'المسافة للإيقاف أو المتابعة · Esc للإعدادات',
     light: 'الوضع الفاتح', dark: 'الوضع الداكن', practice: 'جولة تدريب',
     language: 'اللغة', paused: 'توقفت الجولة مؤقتًا', ready: 'استعد',
-    complete: 'ما المجموع؟', answer: 'الإجابة',
+    complete: 'ما المجموع؟', answer: 'الإجابة', correct: 'إجابة صحيحة!',
+    guess: 'إجابتك', check: 'تحقّق من الإجابة', sound: 'المؤثرات الصوتية',
+    incorrect: 'المجموع مختلف. جرّب مرة أخرى.', invalid: 'أدخل عددًا صحيحًا غير سالب.',
     failed: 'تعذّر توليد جولة بهذه الإعدادات. قلّل عدد الأعداد أو اسمح بالطرح.',
     counter: count => 'العمليات المكتملة: ' + count,
     progress: (index, count) => index + ' من ' + count,
@@ -23,7 +26,8 @@ const translations = {
   en: {
     exitFullscreen: 'Exit fullscreen', light: 'Light mode', dark: 'Dark mode',
     practice: 'Practice round', language: 'Language', paused: 'Round paused',
-    ready: 'Get ready', complete: 'What’s the total?', answer: 'Answer',
+    ready: 'Get ready', complete: 'What’s the total?', answer: 'Answer', correct: 'Correct!',
+    incorrect: 'That total is different. Try again.', invalid: 'Enter a whole number of zero or more.',
     failed: 'Couldn’t generate a round with these settings. Try fewer terms or enable subtraction.',
     counter: count => 'Operations completed: ' + count,
     progress: (index, count) => index + ' of ' + count,
@@ -40,6 +44,11 @@ const number = byId('number');
 const status = byId('round-status');
 const fullscreen = byId('fullscreen');
 const reveal = byId('reveal');
+const answerForm = byId('answer-form');
+const guess = byId('guess');
+const feedback = byId('feedback');
+const progress = byId('progress');
+status.tabIndex = -1;
 const pauseButton = byId('pause');
 const pausable = ['ready', 'number', 'blank'];
 const resume = byId('resume');
@@ -63,6 +72,8 @@ let dark = saved.dark === true;
 let operations = Number.isSafeInteger(saved.operations) && saved.operations >= 0 ? saved.operations : 0;
 let settings;
 let round;
+let feedbackKey;
+let correct = false;
 let index = 0;
 let phase = 'setup';
 let pausedPhase;
@@ -74,7 +85,7 @@ function readSettings() {
   return {
     digits: fields.digits.valueAsNumber, count: fields.count.valueAsNumber,
     visible: fields.visible.valueAsNumber, blank: fields.blank.valueAsNumber,
-    mode: fields.mode.value, subtraction: fields.subtraction.checked,
+    mode: fields.mode.value, subtraction: fields.subtraction.checked, sound: fields.sound.checked,
   };
 }
 
@@ -87,6 +98,18 @@ for (const name of ['digits', 'count', 'visible', 'blank']) {
 }
 if (['simple', 'five', 'ten'].includes(saved.settings?.mode)) fields.mode.value = saved.settings.mode;
 if (typeof saved.settings?.subtraction === 'boolean') fields.subtraction.checked = saved.settings.subtraction;
+if (typeof saved.settings?.sound === 'boolean') fields.sound.checked = saved.settings.sound;
+
+function updateModeControls() {
+  const simple = fields.mode.value === 'simple';
+  fields.count.max = simple ? simpleMaxTerms : 30;
+  if (fields.count.valueAsNumber > Number(fields.count.max)) fields.count.value = fields.count.max;
+  fields.subtraction.disabled = simple;
+  byId('subtraction-option').hidden = simple;
+  byId('simple-limit').hidden = !simple;
+}
+
+updateModeControls();
 settings = readSettings();
 
 function save() {
@@ -112,13 +135,14 @@ function render() {
   if (!round || phase === 'setup') return;
 
   const shown = phase === 'ready' || (phase === 'paused' && pausedPhase === 'ready') ? 0 : index + 1;
-  byId('progress').textContent = t('progress')(format(shown), format(round.terms.length));
-  const statusKey = { ready: 'ready', paused: 'paused', complete: 'complete', answer: 'answer' }[phase];
+  progress.textContent = t('progress')(format(shown), format(round.terms.length));
+  const statusKey = { ready: 'ready', paused: 'paused', complete: 'complete', answer: correct ? 'correct' : 'answer' }[phase];
   status.textContent = statusKey ? t(statusKey) : '';
   number.textContent = phase === 'number' ? display(round.terms[index]) :
     phase === 'answer' ? display(round.total) : '';
   pauseButton.hidden = !pausable.includes(phase);
-  reveal.hidden = phase !== 'complete';
+  answerForm.hidden = phase !== 'complete';
+  feedback.textContent = feedbackKey ? t(feedbackKey) : '';
   resume.hidden = phase !== 'paused';
   again.hidden = phase !== 'answer';
 }
@@ -153,6 +177,7 @@ function advance() {
   if (phase === 'ready' || phase === 'blank') {
     phase = 'number';
     render();
+    if (settings.sound) playSound('flash');
     schedule(settings.visible);
     return;
   }
@@ -161,12 +186,13 @@ function advance() {
     operations += round.terms.length - 1;
     save();
     render();
-    reveal.focus();
+    status.focus({ preventScroll: true });
     return;
   }
   index++;
   if (settings.blank === 0) {
     render();
+    if (settings.sound) playSound('flash');
     schedule(settings.visible);
   } else {
     phase = 'blank';
@@ -184,12 +210,17 @@ function start() {
     return;
   }
   clearTimeout(timer);
+  if (settings.sound) void unlockSound();
+  answerForm.reset();
+  clearFeedback();
+  correct = false;
   round = next;
   index = 0;
   phase = 'ready';
   error.hidden = true;
   render();
-  back.focus();
+  back.focus({ preventScroll: true });
+  practice.scrollIntoView({ block: 'start' });
   schedule(800);
 }
 
@@ -212,6 +243,7 @@ function pause() {
 }
 
 function continueRound() {
+  if (settings.sound) void unlockSound();
   phase = pausedPhase;
   render();
   back.focus();
@@ -226,6 +258,7 @@ form.addEventListener('submit', event => {
 });
 form.addEventListener('change', () => {
   error.hidden = true;
+  updateModeControls();
   if (form.checkValidity()) {
     settings = readSettings();
     save();
@@ -235,11 +268,37 @@ back.addEventListener('click', showSetup);
 pauseButton.addEventListener('click', pause);
 resume.addEventListener('click', continueRound);
 again.addEventListener('click', start);
-reveal.addEventListener('click', () => {
+function clearFeedback() {
+  feedbackKey = undefined;
+  feedback.textContent = '';
+  guess.removeAttribute('aria-invalid');
+}
+
+function showAnswer() {
   phase = 'answer';
   render();
-  again.focus();
+  again.focus({ preventScroll: true });
+}
+
+guess.addEventListener('input', clearFeedback);
+answerForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const answer = parseAnswer(guess.value);
+  if (answer === round.total) {
+    correct = true;
+    if (settings.sound) playSound('correct');
+    showAnswer();
+    return;
+  }
+
+  feedbackKey = answer === null ? 'invalid' : 'incorrect';
+  if (answer === null) guess.setAttribute('aria-invalid', 'true');
+  if (answer !== null && settings.sound) playSound('incorrect');
+  render();
+  guess.select();
+  guess.focus();
 });
+reveal.addEventListener('click', showAnswer);
 fullscreen.hidden = !document.fullscreenEnabled;
 fullscreen.addEventListener('click', async () => {
   try {

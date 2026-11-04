@@ -27,6 +27,21 @@ export function classifyMove(total, term) {
   return usesFive ? 'five' : 'simple';
 }
 
+export const simpleMaxTerms = 5;
+
+function simpleMovesLeft(total, place) {
+  const leading = Math.floor(total / place);
+  // Each further term must move at least one bead on the leading rod.
+  return 4 - (leading % 5) + Number(leading < 5);
+}
+
+export function parseAnswer(input) {
+  const digits = input.trim().replace(/[٠-٩۰-۹]/g, digit => String(digit.charCodeAt(0) & 15));
+  if (!/^[0-9]+$/.test(digits)) return null;
+  const value = Number(digits);
+  return Number.isSafeInteger(value) ? value : null;
+}
+
 export function generateRound({ digits, count, mode, subtraction }, random = Math.random) {
   if (!Number.isInteger(digits) || digits < 1 || digits > 4 ||
       !Number.isInteger(count) || count < 2 || count > 30 ||
@@ -38,10 +53,23 @@ export function generateRound({ digits, count, mode, subtraction }, random = Mat
   const max = 10 ** digits - 1;
   const width = max - min + 1;
 
+  const simple = mode === 'simple';
+  if (simple) {
+    subtraction = false;
+    if (count > simpleMaxTerms) return null;
+  }
+  const openingDigits = simple
+    ? [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(digit => simpleMovesLeft(digit, 1) >= count - 1)
+    : [];
+
   if (!subtraction && mode !== 'ten' && count * min > max) return null;
 
   for (let attempt = 0; attempt < 64; attempt++) {
     let total = min + Math.floor(random() * width);
+    if (simple) {
+      const leading = openingDigits[Math.floor(random() * openingDigits.length)];
+      total = leading * min + Math.floor(random() * min);
+    }
     const terms = [total];
 
     while (terms.length < count) {
@@ -53,7 +81,8 @@ export function generateRound({ digits, count, mode, subtraction }, random = Mat
       for (let index = 0; index < width; index++) {
         const magnitude = min + (start + direction * index + width) % width;
         const first = preferredSign * magnitude;
-        if (total + first >= 0 && classifyMove(total, first) === mode) {
+        if (total + first >= 0 && classifyMove(total, first) === mode &&
+            (!simple || simpleMovesLeft(total + first, min) >= count - terms.length - 1)) {
           selected = first;
           break;
         }

@@ -85,7 +85,7 @@ legend { padding: 0; margin-bottom: .65rem; font-weight: 750; }
 }
 .mode-grid input:checked + span { background: var(--selected); border-color: var(--accent); }
 .mode-grid input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 3px; }
-.settings-grid label { display: grid; gap: .4rem; font-size: .9rem; font-weight: 650; }
+.settings-grid label { display: grid; align-content: start; gap: .4rem; font-size: .9rem; font-weight: 650; }
 input[type="number"], select, .secondary {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -122,7 +122,41 @@ button:hover { filter: brightness(.9); }
 #keyboard-help { text-align: center; font-size: .8rem; }
 #practice:fullscreen { border: 0; border-radius: 0; overflow: auto; }
 #practice:fullscreen .stage { min-height: 75vh; }
-@media (max-width: 410px) {
-  .mode-grid { grid-template-columns: 1fr; }
-  .mode-grid label span { gap: .15rem; }
+
+.toggles { display: flex; flex-wrap: wrap; gap: 0 1.25rem; margin-block: .65rem; }
+.toggle { margin: 0; min-height: 2.75rem; cursor: pointer; }
+button, select, input[type="number"] { min-height: 44px; }
+#answer-form { display: grid; gap: .65rem; width: min(100%, 20rem); }
+#answer-form label { font-weight: 650; }
+#guess {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: .65rem;
+  padding: .7rem;
+  min-width: 0;
+  font-size: 1.25rem;
+  text-align: center;
+}
+#feedback { margin: 0; color: var(--error); }
+#feedback:empty, #number:empty { display: none; }
+.round-controls { display: flex; justify-content: center; }
+.round-controls button, #resume, #again { width: min(100%, 20rem); }
+
+@media (max-width: 600px) {
+  .site-header { padding-block: .75rem; }
+  main { padding-block-start: .5rem; }
+  .intro { margin-block: .5rem 1rem; }
+  .intro p:last-child { margin-bottom: 0; }
+  .mode-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+  .mode-grid label span { padding: .55rem .45rem; font-size: .875rem; }
+  .settings-grid input { font-size: 1rem; }
+  .actions { justify-content: center; text-align: center; }
+  .actions .primary { width: 100%; }
+  .round-header { gap: .35rem; }
+  .round-header button { padding-inline: .5rem; font-size: .875rem; }
+  .stage { min-height: clamp(14rem, 52svh, 27rem); padding-block: 1rem; }
+  #number { font-size: clamp(2.5rem, 15vw, 6rem); }
+}
+@media (pointer: coarse) {
+  #keyboard-help { display: none; }
 }

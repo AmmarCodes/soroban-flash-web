@@ -32,14 +32,14 @@
       <div class="intro">
         <p class="eyebrow" data-copy="eyebrow">MENTAL ARITHMETIC</p>
         <h1>Flash Anzan</h1>
-        <p data-copy="intro">Watch the numbers flash, keep a running total in your head, then reveal the answer.</p>
+        <p data-copy="intro">Watch the numbers flash, keep a running total in your head, then enter your answer to check it.</p>
       </div>
 
       <form id="settings" class="card">
         <fieldset>
           <legend data-copy="difficulty">Difficulty</legend>
           <div class="mode-grid">
-            <label><input type="radio" name="mode" value="simple" checked><span><strong data-copy="simple">Simple</strong><small data-copy="simpleDetail">Direct bead moves</small></span></label>
+            <label><input type="radio" name="mode" value="simple" checked><span><strong data-copy="simple">Simple</strong><small data-copy="simpleDetail">Direct addition</small></span></label>
             <label><input type="radio" name="mode" value="five"><span><strong data-copy="five">Complex 5</strong><small data-copy="fiveDetail">Complements of five</small></span></label>
             <label><input type="radio" name="mode" value="ten"><span><strong data-copy="ten">Complex 10</strong><small data-copy="tenDetail">Carries and borrows</small></span></label>
           </div>
@@ -47,12 +47,15 @@
 
         <div class="settings-grid">
           <label><span data-copy="digits">Digits per term</span><input name="digits" type="number" min="1" max="4" required value="1"></label>
-          <label><span data-copy="count">Terms per round</span><input name="count" type="number" min="2" max="30" required value="5"></label>
+          <label><span data-copy="count">Terms per round</span><input name="count" type="number" min="2" max="30" required value="5"><small id="simple-limit" data-copy="simpleLimit">Up to 5 terms in Simple</small></label>
           <label><span data-copy="visible">Number duration (ms)</span><input name="visible" type="number" min="100" max="5000" required value="800"></label>
           <label><span data-copy="blank">Blank interval (ms)</span><input name="blank" type="number" min="0" max="5000" required value="300"></label>
         </div>
 
-        <label class="toggle"><input type="checkbox" name="subtraction" checked><span data-copy="subtraction">Include subtraction</span></label>
+        <div class="toggles">
+          <label class="toggle" id="subtraction-option"><input type="checkbox" name="subtraction" checked><span data-copy="subtraction">Include subtraction</span></label>
+          <label class="toggle"><input type="checkbox" name="sound" checked><span data-copy="sound">Sound effects</span></label>
+        </div>
         <p id="error" class="error" role="alert" hidden></p>
         <div class="actions">
           <button class="primary" type="submit" data-copy="start">Start round</button>
@@ -65,16 +68,24 @@
       <div class="round-header">
         <button type="button" id="back" class="secondary" data-copy="back">Settings</button>
         <span id="progress"></span>
-        <button type="button" id="pause" class="secondary" hidden data-copy="pause">Pause</button>
         <button type="button" id="fullscreen" class="secondary" data-copy="fullscreen">Fullscreen</button>
       </div>
 
       <div class="stage">
         <p id="round-status" role="status"></p>
         <div id="number" dir="ltr"></div>
-        <button type="button" id="reveal" class="primary" hidden data-copy="reveal">Reveal answer</button>
+        <form id="answer-form" hidden novalidate>
+          <label for="guess" data-copy="guess">Your answer</label>
+          <input id="guess" type="text" inputmode="numeric" enterkeyhint="go" autocomplete="off" maxlength="16" dir="ltr" aria-describedby="feedback">
+          <p id="feedback" role="status"></p>
+          <button type="submit" class="primary" data-copy="check">Check answer</button>
+          <button type="button" id="reveal" class="secondary" data-copy="reveal">Reveal answer</button>
+        </form>
         <button type="button" id="resume" class="primary" hidden data-copy="resume">Resume</button>
         <button type="button" id="again" class="primary" hidden data-copy="again">New round</button>
+      </div>
+      <div class="round-controls">
+        <button type="button" id="pause" class="secondary" hidden data-copy="pause">Pause</button>
       </div>
       <p id="keyboard-help" data-copy="keyboard">Space to pause or continue · Esc for settings</p>
     </section>
