@@ -1,5 +1,5 @@
-import { generateRound, parseAnswer, simpleMaxTerms } from './engine.mjs';
-import { playSound, unlockSound } from './sound.mjs';
+import { generateRound, parseAnswer, simpleMaxTerms } from './engine.mjs?v=2';
+import { playSound, unlockSound } from './sound.mjs?v=2';
 
 const translations = {
   ar: {
